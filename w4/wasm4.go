@@ -5,6 +5,9 @@ package w4
 
 import "unsafe"
 
+//go:linkname main main.main
+func main() {}
+
 // ┌───────────────────────────────────────────────────────────────────────────┐
 // │                                                                           │
 // │ Platform Constants                                                        │
