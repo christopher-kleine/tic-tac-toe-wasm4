@@ -4,7 +4,6 @@ import (
 	"cart/utils"
 	"cart/w4"
 	"image"
-	"strconv"
 )
 
 type Game struct {
@@ -246,7 +245,6 @@ func (g *Game) CPU() (int, int) {
 		}
 	}
 	l := len(fields)
-	w4.Trace(strconv.Itoa(l), len(strconv.Itoa(l)))
 	index := int(g.totalFrameCount) % l
 	return fields[index].X, fields[index].Y
 }
