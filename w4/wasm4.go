@@ -5,9 +5,6 @@ package w4
 
 import "unsafe"
 
-//go:linkname main main.main
-func main() {}
-
 // ┌───────────────────────────────────────────────────────────────────────────┐
 // │                                                                           │
 // │ Platform Constants                                                        │
@@ -126,4 +123,8 @@ func MemSet(dest *byte, b byte, size uint) uint
 
 /** Prints a message to the debug console. */
 //go:export traceUtf8
-func Trace(str string, byteLength int)
+func Trace(str string)
+
+// TinyGo requires a main function, so provide one
+//go:linkname main main.main
+func main() {}
