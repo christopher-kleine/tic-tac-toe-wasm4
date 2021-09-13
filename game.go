@@ -17,6 +17,7 @@ type Game struct {
 	seed            int64
 	totalFrameCount int64
 	rnd             func(uint) uint
+	stars           []Star
 	playerSprite    interface {
 		Draw(image.Point, bool)
 	}
@@ -36,12 +37,34 @@ func (g *Game) Move(X, Y int) {
 
 func (g *Game) Update() {
 	g.totalFrameCount++
+
+	if g.frameCount%2 == 0 && len(g.stars) > 0 {
+		for index := range g.stars {
+			g.stars[index].X = g.stars[index].X + g.stars[index].VelX
+			if g.stars[index].X > 160 {
+				g.stars[index] = Star{
+					X:    int(0 - g.rnd(40)),
+					Y:    int(g.rnd(160)),
+					VelX: int(g.rnd(4) + 1),
+				}
+			}
+		}
+	}
+
 	switch g.winner {
 	case 0:
 		{
 			button := utils.JustPressedGamepad(0)
 			if button != 0 && len(g.stars) < 1 {
 				g.rnd = Random(uint(g.totalFrameCount))
+				g.stars = make([]Star, g.rnd(160)+160)
+				for index := range g.stars {
+					g.stars[index] = Star{
+						X:    int(g.rnd(160)),
+						Y:    int(g.rnd(160)),
+						VelX: int(g.rnd(4) + 1),
+					}
+				}
 			}
 
 			switch button {
@@ -69,6 +92,7 @@ func (g *Game) Update() {
 				}
 			case w4.BUTTON_2:
 				X, Y := g.CPU()
+				g.cursor = image.Pt(X, Y)
 				g.Move(X, Y)
 			}
 		}
@@ -87,6 +111,11 @@ func (g *Game) Update() {
 }
 
 func (g *Game) Draw() {
+	for _, star := range g.stars {
+		*w4.DRAW_COLORS = 4 - uint16(star.VelX)
+		w4.Line(star.X, star.Y, star.X, star.Y)
+	}
+
 	*w4.DRAW_COLORS = 0x4320
 
 	board.Draw()
