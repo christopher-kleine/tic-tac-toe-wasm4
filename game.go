@@ -4,7 +4,6 @@ import (
 	"cart/utils"
 	"cart/w4"
 	"image"
-	"strconv"
 )
 
 type Game struct {
@@ -16,6 +15,8 @@ type Game struct {
 	winner          int
 	seed            int64
 	totalFrameCount int64
+	rnd             func(uint) uint
+	stars           []Star
 	playerSprite    interface {
 		Draw(image.Point, bool)
 	}
@@ -35,10 +36,37 @@ func (g *Game) Move(X, Y int) {
 
 func (g *Game) Update() {
 	g.totalFrameCount++
+
+	if g.frameCount%2 == 0 && len(g.stars) > 0 {
+		for index := range g.stars {
+			g.stars[index].X = g.stars[index].X + g.stars[index].VelX
+			if g.stars[index].X > 160 {
+				g.stars[index] = Star{
+					X:    int(0 - g.rnd(40)),
+					Y:    int(g.rnd(160)),
+					VelX: int(g.rnd(4) + 1),
+				}
+			}
+		}
+	}
+
 	switch g.winner {
 	case 0:
 		{
-			switch utils.JustPressedGamepad(0) {
+			button := utils.JustPressedGamepad(0)
+			if button != 0 && len(g.stars) < 1 {
+				g.rnd = Random(uint(g.totalFrameCount))
+				g.stars = make([]Star, g.rnd(160)+160)
+				for index := range g.stars {
+					g.stars[index] = Star{
+						X:    int(g.rnd(160)),
+						Y:    int(g.rnd(160)),
+						VelX: int(g.rnd(4) + 1),
+					}
+				}
+			}
+
+			switch button {
 			case w4.BUTTON_LEFT:
 				g.cursor.X--
 				if g.cursor.X < 0 {
@@ -63,6 +91,7 @@ func (g *Game) Update() {
 				}
 			case w4.BUTTON_2:
 				X, Y := g.CPU()
+				g.cursor = image.Pt(X, Y)
 				g.Move(X, Y)
 			}
 		}
@@ -81,6 +110,11 @@ func (g *Game) Update() {
 }
 
 func (g *Game) Draw() {
+	for _, star := range g.stars {
+		*w4.DRAW_COLORS = 4 - uint16(star.VelX)
+		w4.Line(star.X, star.Y, star.X, star.Y)
+	}
+
 	*w4.DRAW_COLORS = 0x4320
 
 	board.Draw()
@@ -211,7 +245,6 @@ func (g *Game) CPU() (int, int) {
 		}
 	}
 	l := len(fields)
-	w4.Trace(strconv.Itoa(l), len(strconv.Itoa(l)))
 	index := int(g.totalFrameCount) % l
 	return fields[index].X, fields[index].Y
 }
