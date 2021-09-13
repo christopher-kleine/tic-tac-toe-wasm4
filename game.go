@@ -16,6 +16,7 @@ type Game struct {
 	winner          int
 	seed            int64
 	totalFrameCount int64
+	rnd             func(uint) uint
 	playerSprite    interface {
 		Draw(image.Point, bool)
 	}
@@ -38,7 +39,12 @@ func (g *Game) Update() {
 	switch g.winner {
 	case 0:
 		{
-			switch utils.JustPressedGamepad(0) {
+			button := utils.JustPressedGamepad(0)
+			if button != 0 && len(g.stars) < 1 {
+				g.rnd = Random(uint(g.totalFrameCount))
+			}
+
+			switch button {
 			case w4.BUTTON_LEFT:
 				g.cursor.X--
 				if g.cursor.X < 0 {
